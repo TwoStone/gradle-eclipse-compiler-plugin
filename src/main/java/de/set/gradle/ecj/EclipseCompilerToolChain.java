@@ -28,7 +28,7 @@ public class EclipseCompilerToolChain implements JavaToolChainInternal {
     this.extension = extension;
   }
 
-  public static EclipseCompilerToolChain create(Project project) {
+  static EclipseCompilerToolChain create(Project project) {
     return new EclipseCompilerToolChain(
         project.getConfigurations().getByName(EclipseCompilerBasePlugin.ECJ_CONFIGURATION),
         (EclipseCompilerExtension)
@@ -88,10 +88,12 @@ public class EclipseCompilerToolChain implements JavaToolChainInternal {
     }
 
     @Override
-    public void explain(TreeVisitor<? super String> visitor) {}
+    public void explain(TreeVisitor<? super String> visitor) {
+    }
   }
 
   private class UnavailableToolProvider implements ToolProvider {
+
     private final JavaPlatform targetPlatform;
 
     private UnavailableToolProvider(JavaPlatform targetPlatform) {
@@ -99,7 +101,7 @@ public class EclipseCompilerToolChain implements JavaToolChainInternal {
     }
 
     @Override
-    public <T extends CompileSpec> Compiler<T> newCompiler(Class<T> aClass) {
+    public <T extends CompileSpec> Compiler<T> newCompiler(Class<T> compilerClass) {
       throw new IllegalArgumentException(getMessage());
     }
 

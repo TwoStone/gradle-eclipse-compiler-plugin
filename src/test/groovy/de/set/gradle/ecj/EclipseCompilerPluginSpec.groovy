@@ -30,7 +30,7 @@ class EclipseCompilerPluginSpec extends PluginProjectSpec {
         def compileTasks = project.tasks.withType(JavaCompile)
         compileTasks.size() > 0
         compileTasks.all {
-             assert it.toolChain instanceof EclipseCompilerToolChain
+            assert it.toolChain instanceof EclipseCompilerToolChain
         }
     }
 }

@@ -1,5 +1,8 @@
 package de.set.gradle.ecj;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.internal.tasks.compile.CommandLineJavaCompiler;
 import org.gradle.api.internal.tasks.compile.JavaCompileSpec;
@@ -9,11 +12,9 @@ import org.gradle.api.tasks.WorkResult;
 import org.gradle.internal.jvm.Jvm;
 import org.gradle.language.base.internal.compile.Compiler;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
-/** {@link Compiler} that calls the Eclipse Compiler for Java for code compilation. */
+/**
+ * {@link Compiler} that calls the Eclipse Compiler for Java for code compilation.
+ */
 public class EclipseCompilerAdapter implements Compiler<JavaCompileSpec> {
 
   private static final Logger LOGGER = Logging.getLogger(EclipseCompilerAdapter.class);
