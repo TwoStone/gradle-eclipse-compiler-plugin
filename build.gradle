@@ -1,9 +1,14 @@
+plugins {
+    id "com.gradle.plugin-publish" version "0.9.7"
+}
+
 apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'java-gradle-plugin'
 apply plugin: 'checkstyle'
 
-group 'de.set.gradle'
+group = 'de.set.gradle'
+version = '1.0.0'
 
 sourceCompatibility = '1.8'
 
@@ -40,3 +45,18 @@ gradlePlugin {
 checkstyle {
     toolVersion = '8.2'
 }
+
+pluginBundle {
+    website = 'https://github.com/TwoStone/gradle-eclipse-compiler-plugin'
+    vcsUrl = 'https://github.com/TwoStone/gradle-eclipse-compiler-plugin'
+    description = 'Gradle plugin for using the eclipse compiler for java (ecj) for compiling java files instead of javac'
+    tags = ['ecj', 'eclipse compiler for java', 'java', 'compile']
+
+    plugins {
+        ecjPlugin {
+            id = 'de.set.ecj'
+            displayName = 'Gradle Eclipse Compiler for Java Plugin'
+        }
+    }
+}
+
