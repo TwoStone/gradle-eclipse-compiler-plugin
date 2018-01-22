@@ -5,10 +5,11 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
+import spock.lang.Unroll
 
 class EclipseCompilerPluginIntegrationSpec extends Specification {
 
-    private static def GRADLE_VERSIONS = ['4.0', '4.4.1']
+    private static def GRADLE_VERSIONS = ['4.0', '4.2', '4.4.1']
 
     @Rule TemporaryFolder temporaryProjectDir = new TemporaryFolder()
 
@@ -22,7 +23,8 @@ class EclipseCompilerPluginIntegrationSpec extends Specification {
         settingsFile = temporaryProjectDir.newFile('settings.gradle')
     }
 
-    def 'use eclipse compiler for compiling'() {
+    @Unroll
+    def 'use eclipse compiler for compiling with Gradle version #gradleVersion'() {
         given:
         writeHelloWorld("de.set.gradle")
         buildFile << '''\
@@ -53,7 +55,8 @@ class EclipseCompilerPluginIntegrationSpec extends Specification {
         gradleVersion << GRADLE_VERSIONS
     }
 
-    def 'javaCompile output is cachable'() {
+    @Unroll
+    def 'javaCompile output is cachable with Gradle version #gradleVersion'() {
         given:
         writeHelloWorld("de.set.gradle")
         buildFile << '''\
