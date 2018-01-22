@@ -1,6 +1,5 @@
 package de.set.gradle.ecj
 
-import org.gradle.api.logging.LogLevel
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Rule
@@ -8,6 +7,8 @@ import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
 
 class EclipseCompilerPluginIntegrationSpec extends Specification {
+
+    private static def GRADLE_VERSIONS = ['4.0', '4.4.1']
 
     @Rule TemporaryFolder temporaryProjectDir = new TemporaryFolder()
 
@@ -25,8 +26,10 @@ class EclipseCompilerPluginIntegrationSpec extends Specification {
         given:
         writeHelloWorld("de.set.gradle")
         buildFile << '''\
-            apply plugin: 'de.set.ecj'
-            apply plugin: 'java'
+            plugins {
+                id 'de.set.ecj'
+                id 'java'
+            }
             
             repositories {
                 jcenter()
@@ -36,7 +39,7 @@ class EclipseCompilerPluginIntegrationSpec extends Specification {
         when:
         def result = org.gradle.testkit.runner.GradleRunner.create()
             .withGradleVersion(gradleVersion)
-            .withProjectDir(getProjectDir())
+            .withProjectDir(projectDir)
             .withArguments('build', '-i')
             .withPluginClasspath()
             .build()
@@ -47,15 +50,17 @@ class EclipseCompilerPluginIntegrationSpec extends Specification {
         result.task(':compileJava').outcome == TaskOutcome.SUCCESS
 
         where:
-        gradleVersion << ['4.0', '4.2', '4.3', '4.4.1']
+        gradleVersion << GRADLE_VERSIONS
     }
 
     def 'javaCompile output is cachable'() {
         given:
         writeHelloWorld("de.set.gradle")
         buildFile << '''\
-            apply plugin: 'de.set.ecj'
-            apply plugin: 'java'
+            plugins {
+                id 'de.set.ecj'
+                id 'java'
+            }
             
             repositories {
                 jcenter()
@@ -71,23 +76,29 @@ class EclipseCompilerPluginIntegrationSpec extends Specification {
         '''.stripIndent()
 
         when:
-        runGradle(gradleVersion, 'build', '--build-cache', '-i')
-        def secondCall = runGradle(gradleVersion, 'clean', 'build', '--build-cache', '-i')
+        def result = runGradle(gradleVersion, 'build', '--build-cache')
+
+        then:
+        fileExists('build/classes/java/main/de/set/gradle/HelloWorld.class')
+        result.task(':compileJava').outcome == TaskOutcome.SUCCESS
+
+        when:
+        new File(projectDir, 'build').deleteDir()
+        def secondCall = runGradle(gradleVersion, 'build', '--build-cache')
 
         then:
         fileExists('build/classes/java/main/de/set/gradle/HelloWorld.class')
         secondCall.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
-        !secondCall.output.contains('Compiling sources using eclipse compiler for java')
 
         where:
-        gradleVersion << ['4.0', '4.2', '4.3', '4.4.1']
+        gradleVersion << GRADLE_VERSIONS
     }
 
     private BuildResult runGradle(String gradleVersion, String... args) {
         org.gradle.testkit.runner.GradleRunner.create()
                 .withGradleVersion(gradleVersion)
                 .withProjectDir(getProjectDir())
-                .withArguments('build', '-i')
+                .withArguments(args)
                 .withPluginClasspath()
                 .build()
     }
