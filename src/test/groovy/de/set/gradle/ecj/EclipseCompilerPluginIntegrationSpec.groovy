@@ -1,15 +1,30 @@
 package de.set.gradle.ecj
 
-import nebula.test.IntegrationSpec
-import nebula.test.functional.ExecutionResult
 import org.gradle.api.logging.LogLevel
+import org.gradle.testkit.runner.BuildResult
+import org.gradle.testkit.runner.TaskOutcome
+import org.junit.Rule
+import org.junit.rules.TemporaryFolder
+import spock.lang.Specification
 
-class EclipseCompilerPluginIntegrationSpec extends IntegrationSpec {
+class EclipseCompilerPluginIntegrationSpec extends Specification {
+
+    @Rule TemporaryFolder temporaryProjectDir = new TemporaryFolder()
+
+    File buildFile
+    File settingsFile
+    File projectDir
+
+    def setup() {
+        projectDir = temporaryProjectDir.getRoot()
+        buildFile = temporaryProjectDir.newFile('build.gradle')
+        settingsFile = temporaryProjectDir.newFile('settings.gradle')
+    }
 
     def 'use eclipse compiler for compiling'() {
         given:
         writeHelloWorld("de.set.gradle")
-        buildFile << '''
+        buildFile << '''\
             apply plugin: 'de.set.ecj'
             apply plugin: 'java'
             
@@ -17,21 +32,28 @@ class EclipseCompilerPluginIntegrationSpec extends IntegrationSpec {
                 jcenter()
             }
         '''.stripIndent()
-        logLevel = logLevel.INFO
 
         when:
-        ExecutionResult result = runTasksSuccessfully('build')
+        def result = org.gradle.testkit.runner.GradleRunner.create()
+            .withGradleVersion(gradleVersion)
+            .withProjectDir(getProjectDir())
+            .withArguments('build', '-i')
+            .withPluginClasspath()
+            .build()
 
         then:
         fileExists('build/classes/java/main/de/set/gradle/HelloWorld.class')
-        result.standardOutput.contains(':compileJava')
-        result.standardOutput.contains('Compiling sources using eclipse compiler for java')
+        result.getOutput().contains('Compiling sources using eclipse compiler for java')
+        result.task(':compileJava').outcome == TaskOutcome.SUCCESS
+
+        where:
+        gradleVersion << ['4.0', '4.2', '4.3', '4.4.1']
     }
 
     def 'javaCompile output is cachable'() {
         given:
         writeHelloWorld("de.set.gradle")
-        buildFile << '''
+        buildFile << '''\
             apply plugin: 'de.set.ecj'
             apply plugin: 'java'
             
@@ -47,15 +69,53 @@ class EclipseCompilerPluginIntegrationSpec extends IntegrationSpec {
                 }
             }
         '''.stripIndent()
-        logLevel = LogLevel.INFO
 
         when:
-        ExecutionResult insertCache = runTasksSuccessfully('build', '--build-cache')
-        ExecutionResult secondCall = runTasksSuccessfully('clean', 'build', '--build-cache')
+        runGradle(gradleVersion, 'build', '--build-cache', '-i')
+        def secondCall = runGradle(gradleVersion, 'clean', 'build', '--build-cache', '-i')
 
         then:
         fileExists('build/classes/java/main/de/set/gradle/HelloWorld.class')
-        secondCall.standardOutput.contains(':compileJava FROM-CACHE')
-        !secondCall.standardOutput.contains('Compiling sources using eclipse compiler for java')
+        secondCall.task(':compileJava').outcome == TaskOutcome.FROM_CACHE
+        !secondCall.output.contains('Compiling sources using eclipse compiler for java')
+
+        where:
+        gradleVersion << ['4.0', '4.2', '4.3', '4.4.1']
+    }
+
+    private BuildResult runGradle(String gradleVersion, String... args) {
+        org.gradle.testkit.runner.GradleRunner.create()
+                .withGradleVersion(gradleVersion)
+                .withProjectDir(getProjectDir())
+                .withArguments('build', '-i')
+                .withPluginClasspath()
+                .build()
+    }
+
+    protected void writeHelloWorld(String packageDotted, File baseDir = projectDir) {
+        def path = 'src/main/java/' + packageDotted.replace('.', '/') + '/HelloWorld.java'
+        def javaFile = createFile(path, baseDir)
+        javaFile << """\
+            package ${packageDotted};
+        
+            public class HelloWorld {
+                public static void main(String[] args) {
+                    System.out.println("Hello Integration Test");
+                }
+            }
+            """.stripIndent()
+    }
+
+    protected File createFile(String path, File baseDir = projectDir) {
+        File file = new File(baseDir, path)
+        if (!file.exists()) {
+            assert file.parentFile.mkdirs() || file.parentFile.exists()
+            file.createNewFile()
+        }
+        return file
+    }
+
+    protected boolean fileExists(String path) {
+        new File(projectDir, path).exists()
     }
 }
