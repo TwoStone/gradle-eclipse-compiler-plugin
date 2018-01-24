@@ -1,6 +1,5 @@
 package de.set.gradle.ecj;
 
-import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -20,12 +19,6 @@ public class EclipseCompilerPlugin implements Plugin<Project> {
     project
         .getTasks()
         .withType(JavaCompile.class)
-        .all(
-            new Action<JavaCompile>() {
-              @Override
-              public void execute(JavaCompile javaCompile) {
-                javaCompile.setToolChain(toolChain);
-              }
-            });
+        .all(javaCompile -> javaCompile.setToolChain(toolChain));
   }
 }

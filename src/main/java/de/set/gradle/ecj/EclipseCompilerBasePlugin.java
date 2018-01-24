@@ -1,10 +1,7 @@
 package de.set.gradle.ecj;
 
-import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.DependencySet;
 
 /**
  * Base Gradle Plugin for the Eclipse Compiler Plugin, that adds the required configuration for the
@@ -28,20 +25,12 @@ public class EclipseCompilerBasePlugin implements Plugin<Project> {
         .getConfigurations()
         .create(
             ECJ_CONFIGURATION,
-            new Action<Configuration>() {
-              @Override
-              public void execute(Configuration configuration) {
-                configuration.defaultDependencies(
-                    new Action<DependencySet>() {
-                      @Override
-                      public void execute(DependencySet dependencies) {
-                        dependencies.add(
-                            project
-                                .getDependencies()
-                                .create(DEFAULT_DEPENDENCY + extension.getToolVersion()));
-                      }
-                    });
-              }
-            });
+            configuration -> configuration.defaultDependencies(
+                dependencies -> {
+                  dependencies.add(
+                      project
+                          .getDependencies()
+                          .create(DEFAULT_DEPENDENCY + extension.getToolVersion()));
+                }));
   }
 }
