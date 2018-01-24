@@ -24,7 +24,7 @@ public class EclipseCompilerAdapter implements Compiler<JavaCompileSpec> {
   private static final Logger LOGGER = Logging.getLogger(EclipseCompilerAdapter.class);
   private Configuration compilerConfiguration;
 
-  private EclipseCompilerAdapter(Configuration compilerConfiguration) {
+  EclipseCompilerAdapter(Configuration compilerConfiguration) {
     this.compilerConfiguration = compilerConfiguration;
   }
 
