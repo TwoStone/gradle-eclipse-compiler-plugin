@@ -9,7 +9,6 @@ apply plugin: 'java-gradle-plugin'
 apply plugin: 'checkstyle'
 
 group = 'de.set.gradle'
-version = '1.1.0'
 
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
@@ -68,4 +67,6 @@ pluginBundle {
         }
     }
 }
+
+tasks.postRelease.dependsOn publishPlugins
 
