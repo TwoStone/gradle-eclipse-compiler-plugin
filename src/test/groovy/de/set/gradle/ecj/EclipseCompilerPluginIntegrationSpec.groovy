@@ -9,7 +9,7 @@ import spock.lang.Unroll
 
 class EclipseCompilerPluginIntegrationSpec extends Specification {
 
-    private static def GRADLE_VERSIONS = ['4.0', '4.2', '4.4.1']
+    private static def GRADLE_VERSIONS = ['4.0', '4.2', '4.4.1', '4.5']
 
     @Rule TemporaryFolder temporaryProjectDir = new TemporaryFolder()
 
@@ -98,10 +98,12 @@ class EclipseCompilerPluginIntegrationSpec extends Specification {
     }
 
     private BuildResult runGradle(String gradleVersion, String... args) {
+        def arguments = []
+        arguments << args << '-s'
         org.gradle.testkit.runner.GradleRunner.create()
                 .withGradleVersion(gradleVersion)
                 .withProjectDir(getProjectDir())
-                .withArguments(args)
+                .withArguments(arguments)
                 .withPluginClasspath()
                 .build()
     }
