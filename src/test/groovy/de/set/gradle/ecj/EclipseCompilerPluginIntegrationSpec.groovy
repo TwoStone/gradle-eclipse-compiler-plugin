@@ -1,6 +1,7 @@
 package de.set.gradle.ecj
 
 import org.gradle.testkit.runner.BuildResult
+import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
@@ -39,12 +40,7 @@ class EclipseCompilerPluginIntegrationSpec extends Specification {
         '''.stripIndent()
 
         when:
-        def result = org.gradle.testkit.runner.GradleRunner.create()
-            .withGradleVersion(gradleVersion)
-            .withProjectDir(projectDir)
-            .withArguments('build', '-i')
-            .withPluginClasspath()
-            .build()
+        def result = runGradle(gradleVersion, 'build', '-i')
 
         then:
         fileExists('build/classes/java/main/de/set/gradle/HelloWorld.class')
@@ -99,8 +95,10 @@ class EclipseCompilerPluginIntegrationSpec extends Specification {
 
     private BuildResult runGradle(String gradleVersion, String... args) {
         def arguments = []
-        arguments << args << '-s'
-        org.gradle.testkit.runner.GradleRunner.create()
+        arguments.addAll(args)
+        arguments.add('-s')
+
+        GradleRunner.create()
                 .withGradleVersion(gradleVersion)
                 .withProjectDir(getProjectDir())
                 .withArguments(arguments)

@@ -21,18 +21,23 @@ public class EclipseCompilerToolChain implements JavaToolChainInternal {
   private final JavaVersion javaVersion = JavaVersion.current();
   private final Configuration compilerConfiguration;
   private final EclipseCompilerExtension extension;
+  private Project project;
 
   private EclipseCompilerToolChain(
-      Configuration compilerConfiguration, EclipseCompilerExtension extension) {
+      Configuration compilerConfiguration,
+      EclipseCompilerExtension extension,
+      Project project) {
+    
     this.compilerConfiguration = compilerConfiguration;
     this.extension = extension;
+    this.project = project;
   }
 
   static EclipseCompilerToolChain create(Project project) {
     return new EclipseCompilerToolChain(
         project.getConfigurations().getByName(EclipseCompilerBasePlugin.ECJ_CONFIGURATION),
         (EclipseCompilerExtension)
-            project.getExtensions().getByName(EclipseCompilerBasePlugin.ECJ_EXTENSION));
+            project.getExtensions().getByName(EclipseCompilerBasePlugin.ECJ_EXTENSION), project);
   }
 
   @Override
@@ -70,7 +75,7 @@ public class EclipseCompilerToolChain implements JavaToolChainInternal {
     public <T extends CompileSpec> Compiler<T> newCompiler(Class<T> spec) {
       if (JavaCompileSpec.class.isAssignableFrom(spec)) {
         return (Compiler<T>)
-            new NormalizingJavaCompiler(new EclipseCompilerAdapter(compilerConfiguration));
+            new NormalizingJavaCompiler(new EclipseCompilerAdapter(compilerConfiguration, project));
       }
       throw new IllegalArgumentException(
           String.format("Don't know how to compile using spec of type %s.", spec.getSimpleName()));

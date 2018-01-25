@@ -1,20 +1,18 @@
 package de.set.gradle.ecj;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
+import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.internal.tasks.compile.CommandLineJavaCompiler;
+import org.gradle.api.internal.tasks.compile.CompilationFailedException;
 import org.gradle.api.internal.tasks.compile.JavaCompileSpec;
+import org.gradle.api.internal.tasks.compile.JavaCompilerArgumentsBuilder;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.WorkResult;
-import org.gradle.api.tasks.compile.ForkOptions;
-import org.gradle.internal.jvm.Jvm;
+import org.gradle.internal.process.ArgWriter;
 import org.gradle.language.base.internal.compile.Compiler;
-import org.gradle.tooling.BuildException;
+import org.gradle.process.ExecResult;
 
 /**
  * {@link Compiler} that calls the Eclipse Compiler for Java for code compilation.
@@ -23,39 +21,38 @@ public class EclipseCompilerAdapter implements Compiler<JavaCompileSpec> {
 
   private static final Logger LOGGER = Logging.getLogger(EclipseCompilerAdapter.class);
   private Configuration compilerConfiguration;
+  private Project project;
 
-  EclipseCompilerAdapter(Configuration compilerConfiguration) {
+  EclipseCompilerAdapter(Configuration compilerConfiguration, Project project) {
     this.compilerConfiguration = compilerConfiguration;
+    this.project = project;
   }
 
   @Override
   public WorkResult execute(JavaCompileSpec javaCompileSpec) {
     LOGGER.info("Compiling sources using eclipse compiler for java");
 
-    List<String> jvmArgs = new ArrayList<>();
-    jvmArgs.add("-cp");
-    jvmArgs.add(compilerConfiguration.getAsPath());
-    jvmArgs.add("org.eclipse.jdt.internal.compiler.batch.Main");
+    final List<String> remainingArguments =
+        new JavaCompilerArgumentsBuilder(javaCompileSpec).includeSourceFiles(true).build();
 
-    File executable = Jvm.current().getJavaExecutable();
-    final ForkOptions forkOptions = getForkOptions(javaCompileSpec);
-    forkOptions.setJvmArgs(jvmArgs);
-    forkOptions.setExecutable(executable.getAbsolutePath());
+    ExecResult result = project.javaexec(exec -> {
+      exec.setWorkingDir(javaCompileSpec.getWorkingDir());
+      exec.setClasspath(compilerConfiguration);
+      exec.setMain("org.eclipse.jdt.internal.compiler.batch.Main");
+      exec.args(shortenArgs(javaCompileSpec.getTempDir(), remainingArguments));
+    });
 
-    // We are using gradle's commandline compiler, that forks a new java process for us
-    return new CommandLineJavaCompiler().execute(javaCompileSpec);
+    if (result.getExitValue() != 0) {
+      throw new CompilationFailedException(result.getExitValue());
+    }
+
+    return () -> true;
   }
 
-  private static ForkOptions getForkOptions(JavaCompileSpec compileSpec) {
-    try {
-      Method compileOptionsGetter = JavaCompileSpec.class.getMethod("getCompileOptions");
-      final Object compileOptions = compileOptionsGetter.invoke(compileSpec);
-
-      final Method getForkOptions = compileOptions.getClass().getMethod("getForkOptions");
-      final Object forkOptions = getForkOptions.invoke(compileOptions);
-      return (ForkOptions) forkOptions;
-    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      throw new BuildException("Cannot access javaCompileSpec forkOptions", e);
-    }
+  private Iterable<String> shortenArgs(File tempDir, List<String> args) {
+    // for command file format, see http://docs.oracle.com/javase/6/docs/technotes/tools/windows/javac.html#commandlineargfile
+    // use platform character and line encoding
+    return ArgWriter.argsFileGenerator(new File(tempDir, "java-compiler-args.txt"),
+        ArgWriter.unixStyleFactory()).transform(args);
   }
 }
