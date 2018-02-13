@@ -12,8 +12,8 @@ public class EclipseCompilerBasePlugin implements Plugin<Project> {
   static final String ECJ_CONFIGURATION = "ecj";
   static final String ECJ_EXTENSION = "ecj";
 
-  private static final String DEFAULT_DEPENDENCY = "org.eclipse.jdt.core.compiler:ecj:";
-  private static final String DEFAULT_VERSION = "4.6.1";
+  private static final String DEFAULT_DEPENDENCY = "org.eclipse.jdt:ecj:";
+  private static final String DEFAULT_VERSION = "3.13.100";
 
   @Override
   public void apply(Project project) {
