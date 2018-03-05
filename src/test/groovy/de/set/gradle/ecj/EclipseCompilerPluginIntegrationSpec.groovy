@@ -10,7 +10,7 @@ import spock.lang.Unroll
 
 class EclipseCompilerPluginIntegrationSpec extends Specification {
 
-    private static def GRADLE_VERSIONS = ['4.0', '4.2', '4.4.1', '4.5']
+    private static def GRADLE_VERSIONS = ['4.0', '4.2', '4.4.1', '4.5', '4.6']
 
     @Rule TemporaryFolder temporaryProjectDir = new TemporaryFolder()
 
