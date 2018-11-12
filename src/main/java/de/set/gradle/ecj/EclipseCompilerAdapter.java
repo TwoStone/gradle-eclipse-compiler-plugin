@@ -22,15 +22,18 @@ public class EclipseCompilerAdapter implements Compiler<JavaCompileSpec> {
   private static final Logger LOGGER = Logging.getLogger(EclipseCompilerAdapter.class);
   private Configuration compilerConfiguration;
   private Project project;
+  private String ecjArtifact;
 
   EclipseCompilerAdapter(Configuration compilerConfiguration, Project project) {
     this.compilerConfiguration = compilerConfiguration;
     this.project = project;
+    EclipseCompilerExtension extension = project.getExtensions().getByType(EclipseCompilerExtension.class);
+    this.ecjArtifact = extension.getToolGroupId()+":"+extension.getToolArtifactId()+":"+extension.getToolVersion();
   }
 
   @Override
   public WorkResult execute(JavaCompileSpec javaCompileSpec) {
-    LOGGER.info("Compiling sources using eclipse compiler for java");
+    LOGGER.info("Compiling sources using eclipse compiler for java ["+this.ecjArtifact+"]");
 
     final List<String> remainingArguments =
         new JavaCompilerArgumentsBuilder(javaCompileSpec).includeSourceFiles(true).build();
