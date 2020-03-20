@@ -46,7 +46,11 @@ public class EclipseCompilerAdapter implements Compiler<JavaCompileSpec> {
     });
 
     if (result.getExitValue() != 0) {
-      throw new CompilationFailedException(result.getExitValue());
+      try { 
+        exec.rethrowFailure(); 
+      } catch (ExecException e) { 
+        throw new CompilationFailedException(e); 
+      }
     }
 
     return () -> true;
