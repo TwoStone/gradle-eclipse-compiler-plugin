@@ -13,6 +13,8 @@ import org.gradle.api.tasks.WorkResult;
 import org.gradle.internal.process.ArgWriter;
 import org.gradle.language.base.internal.compile.Compiler;
 import org.gradle.process.ExecResult;
+import org.gradle.process.internal.ExecException;
+
 
 /**
  * {@link Compiler} that calls the Eclipse Compiler for Java for code compilation.
@@ -46,7 +48,11 @@ public class EclipseCompilerAdapter implements Compiler<JavaCompileSpec> {
     });
 
     if (result.getExitValue() != 0) {
-      throw new CompilationFailedException(result.getExitValue());
+      try { 
+        result.rethrowFailure(); 
+      } catch (ExecException e) { 
+        throw new CompilationFailedException(e); 
+      }
     }
 
     return () -> true;
