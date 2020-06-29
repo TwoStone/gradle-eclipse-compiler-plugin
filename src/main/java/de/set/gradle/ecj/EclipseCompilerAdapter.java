@@ -1,6 +1,7 @@
 package de.set.gradle.ecj;
 
 import java.io.File;
+import java.util.Iterator;
 import java.util.List;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -37,9 +38,11 @@ public class EclipseCompilerAdapter implements Compiler<JavaCompileSpec> {
   public WorkResult execute(JavaCompileSpec javaCompileSpec) {
     LOGGER.info("Compiling sources using eclipse compiler for java ["+this.ecjArtifact+"]");
 
-    final List<String> remainingArguments =
+    List<String> remainingArguments =
         new JavaCompilerArgumentsBuilder(javaCompileSpec).includeSourceFiles(true).build();
 
+    removeUnsupportedCompilerFlags(remainingArguments);
+    
     ExecResult result = project.javaexec(exec -> {
       exec.setWorkingDir(javaCompileSpec.getWorkingDir());
       exec.setClasspath(compilerConfiguration);
@@ -56,6 +59,21 @@ public class EclipseCompilerAdapter implements Compiler<JavaCompileSpec> {
     }
 
     return () -> true;
+  }
+
+  private void removeUnsupportedCompilerFlags(List<String> remainingArguments) {
+      Iterator<String> argsIterator = remainingArguments.iterator();
+      while(argsIterator.hasNext()) {
+          String arg = argsIterator.next();
+          if (arg.equals("-h")) {
+              LOGGER.warn("Suppressing unsupported compiler-flag '-h'");
+              argsIterator.remove();
+              if (argsIterator.hasNext()) {
+                  argsIterator.next();
+                  argsIterator.remove();
+              }
+          }
+      }
   }
 
   private Iterable<String> shortenArgs(File tempDir, List<String> args) {
