@@ -1,3 +1,7 @@
+# ❗❗❗ Deprecation notice ❗❗❗
+
+This plugin is no longer actively maintenanced. The latest gradle updates removed the possibility to hook into the JavaToolChain so this plugin does not work with newer gradle versions. Your are welcome to create a fork of this repository and continue the work.
+
 # Eclipse Compiler for Java (ecj) for Gradle
 
 ## Description
